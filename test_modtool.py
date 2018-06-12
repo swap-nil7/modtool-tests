@@ -63,7 +63,36 @@ class TestModToolCore(unittest.TestCase):
 		""" Tests for the API function add """
 		if self.f_newmod:
 			raise unittest.SkipTest("setUp for API function 'add' failed")
+
 		## Tests for proper exceptions ##
+		self.assertRaises(TypeError, ModToolAdd().run, )
+		test_dict = {}
+		test_dict['directory'] = self.test_dir + '/gr-howto'
+		self.assertRaises(ModToolException, ModToolAdd().run, test_dict)
+		test_dict['blockname'] = 'add_ff'
+		self.assertRaises(ModToolException, ModToolAdd().run, test_dict)
+		test_dict['block_type'] = 'general'
+		self.assertRaises(ModToolException, ModToolAdd().run, test_dict)
+		test_dict['lang'] = 'cxx'
+		self.assertRaises(ModToolException, ModToolAdd().run, test_dict)
+		test_dict['lang'] = 'cpp'
+		test_dict['add_cpp_qa'] = 'Wrong'
+		self.assertRaises(ModToolException, ModToolAdd().run, test_dict)
+		test_dict['add_cpp_qa'] = True
+		test_dict['block_type'] = 'generaleee'
+		self.assertRaises(ModToolException, ModToolAdd().run, test_dict)
+		test_dict['block_type'] = 'general'
+		test_dict['skip_lib'] = 'fail'
+		self.assertRaises(ModToolException, ModToolAdd().run, test_dict)
+		test_dict['skip_lib'] = True
+		self.assertRaises(ModToolException, ModToolAdd().run, test_dict)
+		test_dict['skip_lib'] = False
+
+		## Some tests for checking the created directory, sub-directories and files ##
+		ModToolAdd().run(test_dict)
+		self.assertTrue(path.exists(self.test_dir+'/gr-howto/lib/qa_add_ff.cc'))
+		self.assertTrue(path.exists(self.test_dir+'/gr-howto/lib/add_ff_impl.cc'))
+
 
 	def test_rename(self):
 		""" Tests for the API function rename """
