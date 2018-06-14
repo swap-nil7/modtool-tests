@@ -3,7 +3,7 @@ from os import path
 import unittest
 import warnings
 
-from gnuradio.modtool.core import *
+from gnuradio.modtool.core import * 
 
 class TestModToolCore(unittest.TestCase):
 	""" The tests for the modtool core """
@@ -27,13 +27,14 @@ class TestModToolCore(unittest.TestCase):
 		""" create a new module and block before every test """
 		try:
 			warnings.simplefilter("ignore", ResourceWarning)
-			ModToolNewModule().run({'module_name':'howto', 'directory': self.test_dir})
+			ModToolNewModule({'module_name':'howto', 'directory': self.test_dir}).run()
 		except ModToolException:
 			self.f_newmod = True
 		else:
 			try:
-				ModToolAdd().run({'blockname':'square_ff', 'block_type':'general', 
-					              'lang':'cpp', 'directory': self.test_dir + '/gr-howto'})
+				args = {'blockname':'square_ff', 'block_type':'general', 
+					    'lang':'cpp', 'directory': self.test_dir + '/gr-howto'}
+				ModToolAdd(args).run()
 			except ModToolException:
 				self.f_add = True
 
@@ -46,15 +47,15 @@ class TestModToolCore(unittest.TestCase):
 	def test_newmod(self):
 		""" Tests for the API function newmod """
 		## Tests for proper exceptions ##
-		self.assertRaises(TypeError, ModToolNewModule().run, )
-		self.assertRaises(TypeError, ModToolNewModule().run, 'a', 'b')
-		self.assertRaises(TypeError, ModToolNewModule().run, module_name='fail')
-		self.assertRaises(AttributeError, ModToolNewModule().run, 'a')
-		self.assertRaises(ModToolException, ModToolNewModule().run, {})
-		self.assertRaises(ModToolException, ModToolNewModule().run, {'module_name':'howto', 'directory': self.test_dir})
+		self.assertRaises(AttributeError, ModToolNewModule, 'a', 'b')
+		self.assertRaises(AttributeError, ModToolNewModule, 'a')
+		self.assertRaises(ModToolException, ModToolNewModule, )
+		self.assertRaises(ModToolException, ModToolNewModule, module_name='fail')
+		self.assertRaises(ModToolException, ModToolNewModule, {})
+		self.assertRaises(ModToolException, ModToolNewModule, {'module_name':'howto', 'directory': self.test_dir})
 
 		## Some tests for checking the created directory, sub-directories and files ## 
-		ModToolNewModule().run({'module_name': 'test', 'directory': self.test_dir})
+		ModToolNewModule({'module_name': 'test', 'directory': self.test_dir}).run()
 		self.assertTrue(path.isdir(self.test_dir+'/gr-test'))
 		self.assertTrue(path.isdir(self.test_dir+'/gr-test/lib'))
 		self.assertTrue(path.exists(self.test_dir+'/gr-test/CMakeLists.txt'))
@@ -65,31 +66,31 @@ class TestModToolCore(unittest.TestCase):
 			raise unittest.SkipTest("setUp for API function 'add' failed")
 
 		## Tests for proper exceptions ##
-		self.assertRaises(TypeError, ModToolAdd().run, )
+		#self.assertRaises(TypeError, ModToolAdd().run, )
 		test_dict = {}
 		test_dict['directory'] = self.test_dir + '/gr-howto'
-		self.assertRaises(ModToolException, ModToolAdd().run, test_dict)
+		self.assertRaises(ModToolException, ModToolAdd, test_dict)
 		test_dict['blockname'] = 'add_ff'
-		self.assertRaises(ModToolException, ModToolAdd().run, test_dict)
+		self.assertRaises(ModToolException, ModToolAdd, test_dict)
 		test_dict['block_type'] = 'general'
-		self.assertRaises(ModToolException, ModToolAdd().run, test_dict)
+		self.assertRaises(ModToolException, ModToolAdd, test_dict)
 		test_dict['lang'] = 'cxx'
-		self.assertRaises(ModToolException, ModToolAdd().run, test_dict)
+		self.assertRaises(ModToolException, ModToolAdd, test_dict)
 		test_dict['lang'] = 'cpp'
 		test_dict['add_cpp_qa'] = 'Wrong'
-		self.assertRaises(ModToolException, ModToolAdd().run, test_dict)
+		self.assertRaises(ModToolException, ModToolAdd, test_dict)
 		test_dict['add_cpp_qa'] = True
 		test_dict['block_type'] = 'generaleee'
-		self.assertRaises(ModToolException, ModToolAdd().run, test_dict)
+		self.assertRaises(ModToolException, ModToolAdd, test_dict)
 		test_dict['block_type'] = 'general'
 		test_dict['skip_lib'] = 'fail'
-		self.assertRaises(ModToolException, ModToolAdd().run, test_dict)
+		self.assertRaises(ModToolException, ModToolAdd, test_dict)
 		test_dict['skip_lib'] = True
-		self.assertRaises(ModToolException, ModToolAdd().run, test_dict)
+		self.assertRaises(ModToolException, ModToolAdd, test_dict)
 		test_dict['skip_lib'] = False
 
 		## Some tests for checking the created directory, sub-directories and files ##
-		ModToolAdd().run(test_dict)
+		ModToolAdd(test_dict).run()
 		self.assertTrue(path.exists(self.test_dir+'/gr-howto/lib/qa_add_ff.cc'))
 		self.assertTrue(path.exists(self.test_dir+'/gr-howto/lib/add_ff_impl.cc'))
 
@@ -104,4 +105,8 @@ class TestModToolCore(unittest.TestCase):
 		""" Tests for the API function remove """
 		if self.f_newmod or self.f_add:
 			raise unittest.SkipTest("setUp for API function 'remove' failed")
-		pass
+
+		test_dict = {}
+		test_dict['blockname'] = 'square_ff'
+		test_dict['directory'] = self.test_dir+'/gr-howto'
+		ModToolRemove(test_dict).run()
