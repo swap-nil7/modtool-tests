@@ -56,15 +56,13 @@ class TestModToolCore(unittest.TestCase):
         test_dict = {}
         test_dict['directory'] = self.test_dir
         # module name not specified
-        self.assertRaises(TypeError, ModToolNewModule, **test_dict)
-        self.assertRaises(TypeError, ModToolNewModule, 'a'=='a')
-        self.assertRaises(TypeError, ModToolNewModule, )
+        self.assertRaises(ModToolException, ModToolNewModule(**test_dict).run)
         test_dict['module_name'] = 'howto'
         # expected module_name as a string instead of dict
-        self.assertRaises(TypeError, ModToolNewModule, test_dict)
+        self.assertRaises(TypeError, ModToolNewModule(test_dict).run)
         # directory already exists
         # will not be raised if the command in setup failed
-        self.assertRaises(ModToolException, ModToolNewModule, **test_dict)
+        self.assertRaises(ModToolException, ModToolNewModule(**test_dict).run)
 
         ## Some tests for checking the created directory, sub-directories and files ##
         test_dict['module_name'] = 'test'
@@ -73,6 +71,20 @@ class TestModToolCore(unittest.TestCase):
         self.assertTrue(path.isdir(self.test_dir+'/gr-test/lib'))
         self.assertTrue(path.exists(self.test_dir+'/gr-test/CMakeLists.txt'))
 
+        ## The check through object instantiation ##
+        test_obj = ModToolNewModule()
+        # module name not specified
+        self.assertRaises(ModToolException, test_obj.run)
+        test_obj.info['modname'] = 'howto'
+        test_obj.directory = self.test_dir
+        # directory already exists
+        self.assertRaises(ModToolException, test_obj.run)
+        test_obj.info['modname'] = 'test1'
+        test_obj.run()
+        self.assertTrue(path.isdir(self.test_dir+'/gr-test1'))
+        self.assertTrue(path.isdir(self.test_dir+'/gr-test1/lib'))
+        self.assertTrue(path.exists(self.test_dir+'/gr-test1/CMakeLists.txt'))
+
     def test_add(self):
         """ Tests for the API function add """
         ## skip tests if newmod command wasn't successful
@@ -80,35 +92,34 @@ class TestModToolCore(unittest.TestCase):
             raise unittest.SkipTest("setUp for API function 'add' failed")
 
         ## Tests for proper exceptions ##
-        self.assertRaises(TypeError, ModToolAdd, )
         test_dict = {}
         test_dict['directory'] = self.test_dir + '/gr-howto'
-        # missing 3 positional arguments blockname, block_type, lang
-        self.assertRaises(TypeError, ModToolAdd, **test_dict)
+        # missing blockname, block_type, lang
+        self.assertRaises(ModToolException, ModToolAdd(**test_dict).run)
         test_dict['blockname'] = 'add_ff'
-        # missing 2 positional arguments block_type, lang
-        self.assertRaises(TypeError, ModToolAdd, **test_dict)
+        # missing arguments block_type, lang
+        self.assertRaises(ModToolException, ModToolAdd(**test_dict).run)
         test_dict['block_type'] = 'general'
-        # missing positional argument lang
-        self.assertRaises(TypeError, ModToolAdd, **test_dict)
+        # missing argument lang
+        self.assertRaises(ModToolException, ModToolAdd(**test_dict).run)
         test_dict['lang'] = 'cxx'
         # incorrect language
-        self.assertRaises(ModToolException, ModToolAdd, **test_dict)
+        self.assertRaises(ModToolException, ModToolAdd(**test_dict).run)
         test_dict['lang'] = 'cpp'
         test_dict['add_cpp_qa'] = 'Wrong'
         # boolean is expected for add_cpp_qa
-        self.assertRaises(ModToolException, ModToolAdd, **test_dict)
+        self.assertRaises(ModToolException, ModToolAdd(**test_dict).run)
         test_dict['add_cpp_qa'] = True
         test_dict['block_type'] = 'generaleee'
         # incorrect block type
-        self.assertRaises(ModToolException, ModToolAdd, **test_dict)
+        self.assertRaises(ModToolException, ModToolAdd(**test_dict).run)
         test_dict['block_type'] = 'general'
         test_dict['skip_lib'] = 'fail'
-        # boolean value is expected for skip_lib
-        self.assertRaises(ModToolException, ModToolAdd, **test_dict)
+        # boolean value is expected for skip_lib, fails in instantiation
+        self.assertRaises(ModToolException, ModToolAdd(**test_dict).run)
         test_dict['skip_lib'] = True
         # missing relevant subdir
-        self.assertRaises(ModToolException, ModToolAdd, **test_dict)
+        self.assertRaises(ModToolException, ModToolAdd(**test_dict).run)
 
         ## Some tests for checking the created directory, sub-directories and files ##
         test_dict['skip_lib'] = False
@@ -126,21 +137,19 @@ class TestModToolCore(unittest.TestCase):
         """ Tests for the API function rename """
         if self.f_newmod or self.f_add:
             raise unittest.SkipTest("setUp for API function 'rename' failed")
-
-        self.assertRaises(TypeError, ModToolRename, )
         test_dict = {}
         test_dict['directory'] = self.test_dir+'/gr-howto'
-        # Missing 2 positional arguments blockname, new_name
-        self.assertRaises(TypeError, ModToolRename, **test_dict)
+        # Missing 2 arguments blockname, new_name
+        self.assertRaises(ModToolException, ModToolRename(**test_dict).run)
         test_dict['blockname'] = 'square_ff'
-        # Missing 1 positional argument new_name
-        self.assertRaises(TypeError, ModToolRename, **test_dict)
+        # Missing argument new_name
+        self.assertRaises(ModToolException, ModToolRename(**test_dict).run)
         test_dict['new_name'] = '//#'
         # Invalid new block name!
-        self.assertRaises(ModToolException, ModToolRename, **test_dict)
+        self.assertRaises(ModToolException, ModToolRename(**test_dict).run)
         test_dict['new_name'] = None
         # New Block name not specified
-        self.assertRaises(ModToolException, ModToolRename, **test_dict)
+        self.assertRaises(ModToolException, ModToolRename(**test_dict).run)
 
         ## Some tests for checking the renamed files ##
         test_dict['new_name'] = 'div_ff'
@@ -154,13 +163,11 @@ class TestModToolCore(unittest.TestCase):
         """ Tests for the API function remove """
         if self.f_newmod or self.f_add:
             raise unittest.SkipTest("setUp for API function 'remove' failed")
-
-        self.assertRaises(TypeError, ModToolRename, )
         test_dict = {}
-        # missing positional argument blockname
-        self.assertRaises(TypeError, ModToolRename, **test_dict)
+        # missing argument blockname
+        self.assertRaises(ModToolException, ModToolRename(**test_dict).run)
         test_dict['directory'] = self.test_dir+'/gr-howto'
-        self.assertRaises(TypeError, ModToolRename, **test_dict)
+        self.assertRaises(ModToolException, ModToolRename(**test_dict).run)
 
         ## Some tests to check blocks are not removed with different blocknames ##
         test_dict['blockname'] = 'div_ff'
@@ -177,3 +184,6 @@ class TestModToolCore(unittest.TestCase):
         self.assertTrue(not path.exists(self.test_dir+'/gr-howto/lib/square_ff_impl.cc'))
         self.assertTrue(not path.exists(self.test_dir+'/gr-howto/python/qa_square_ff.py'))
         self.assertTrue(not path.exists(self.test_dir+'/gr-howto/grc/howto_square_ff.xml'))
+
+if __name__ == '__main__':
+    unittest.main()
