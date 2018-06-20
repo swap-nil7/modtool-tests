@@ -69,9 +69,14 @@ class TestModToolCore(unittest.TestCase):
         ModToolNewModule(**test_dict).run()
         self.assertTrue(path.isdir(self.test_dir+'/gr-test'))
         self.assertTrue(path.isdir(self.test_dir+'/gr-test/lib'))
+        self.assertTrue(path.isdir(self.test_dir+'/gr-test/python'))
+        self.assertTrue(path.isdir(self.test_dir+'/gr-test/include'))
+        self.assertTrue(path.isdir(self.test_dir+'/gr-test/docs'))
+        self.assertTrue(path.isdir(self.test_dir+'/gr-test/cmake'))
+        self.assertTrue(path.isdir(self.test_dir+'/gr-test/swig'))
         self.assertTrue(path.exists(self.test_dir+'/gr-test/CMakeLists.txt'))
 
-        ## The check through object instantiation ##
+        ## The check for object instantiation ##
         test_obj = ModToolNewModule()
         # module name not specified
         self.assertRaises(ModToolException, test_obj.run)
@@ -124,14 +129,27 @@ class TestModToolCore(unittest.TestCase):
         ## Some tests for checking the created directory, sub-directories and files ##
         test_dict['skip_lib'] = False
         ModToolAdd(**test_dict).run()
-        self.assertTrue(path.isdir(self.test_dir+'/gr-howto/python'))
-        self.assertTrue(path.isdir(self.test_dir+'/gr-howto/include'))
-        self.assertTrue(path.isdir(self.test_dir+'/gr-howto/docs'))
-        self.assertTrue(path.isdir(self.test_dir+'/gr-howto/cmake'))
-        self.assertTrue(path.exists(self.test_dir+'/gr-howto/CMakeLists.txt'))
+
         self.assertTrue(path.exists(self.test_dir+'/gr-howto/lib/qa_add_ff.cc'))
         self.assertTrue(path.exists(self.test_dir+'/gr-howto/lib/add_ff_impl.cc'))
         self.assertTrue(path.exists(self.test_dir+'/gr-howto/grc/howto_add_ff.xml'))
+        self.assertTrue(path.exists(self.test_dir+'/gr-howto/include/howto/add_ff.h'))
+
+        ## The check for object instantiation ##
+        test_obj = ModToolAdd()
+        test_obj.dir = self.test_dir + '/gr-howto'
+        # missing blocktype, lang, blockname
+        self.assertRaises(ModToolException, test_obj.run)
+        test_obj.info['blocktype'] = 'general'
+        # missing lang, blockname
+        self.assertRaises(ModToolException, test_obj.run)
+        test_obj.info['lang'] = 'cpp'
+        test_obj.info['blockname'] = 'mul_ff'
+        test_obj.run()
+        self.assertTrue(path.exists(self.test_dir+'/gr-howto/lib/mul_ff_impl.cc'))
+        self.assertTrue(path.exists(self.test_dir+'/gr-howto/lib/mul_ff_impl.h'))
+        self.assertTrue(path.exists(self.test_dir+'/gr-howto/grc/howto_mul_ff.xml'))
+        self.assertTrue(path.exists(self.test_dir+'/gr-howto/include/howto/mul_ff.h'))
 
     def test_rename(self):
         """ Tests for the API function rename """
@@ -159,6 +177,16 @@ class TestModToolCore(unittest.TestCase):
         self.assertTrue(path.exists(self.test_dir+'/gr-howto/python/qa_div_ff.py'))
         self.assertTrue(path.exists(self.test_dir+'/gr-howto/grc/howto_div_ff.xml'))
 
+        ## The check for object instantiation ##
+        test_obj = ModToolRename()
+        test_obj.info['oldname'] = 'div_ff'
+        test_obj.info['newname'] = 'sub_ff'
+        test_obj.run()
+        self.assertTrue(path.exists(self.test_dir+'/gr-howto/lib/sub_ff_impl.h'))
+        self.assertTrue(path.exists(self.test_dir+'/gr-howto/lib/sub_ff_impl.cc'))
+        self.assertTrue(path.exists(self.test_dir+'/gr-howto/python/qa_sub_ff.py'))
+        self.assertTrue(path.exists(self.test_dir+'/gr-howto/grc/howto_sub_ff.xml'))
+
     def test_remove(self):
         """ Tests for the API function remove """
         if self.f_newmod or self.f_add:
@@ -184,6 +212,34 @@ class TestModToolCore(unittest.TestCase):
         self.assertTrue(not path.exists(self.test_dir+'/gr-howto/lib/square_ff_impl.cc'))
         self.assertTrue(not path.exists(self.test_dir+'/gr-howto/python/qa_square_ff.py'))
         self.assertTrue(not path.exists(self.test_dir+'/gr-howto/grc/howto_square_ff.xml'))
+
+    def test_makexml(self):
+        """ Tests for the API function makexml """
+        if self.f_newmod or self.f_add:
+            raise unittest.SkipTest("setUp for API function 'makexml' failed")
+        test_dict = {}
+        # missing argument blockname
+        self.assertRaises(ModToolException, ModToolMakeXML(**test_dict).run)
+        test_dict['directory'] = self.test_dir+'/gr-howto'
+        self.assertRaises(ModToolException, ModToolMakeXML(**test_dict).run)
+
+        ## Some tests to check if the command reuns ##
+        test_dict['blockname'] = 'square_ff'
+        ModToolMakeXML(**test_dict).run()
+
+    def test_disable(self):
+        """ Tests for the API function disable """
+        if self.f_newmod or self.f_add:
+            raise unittest.SkipTest("setUp for API function 'disable' failed")
+        test_dict = {}
+        # missing argument blockname
+        self.assertRaises(ModToolException, ModToolDisable(**test_dict).run)
+        test_dict['directory'] = self.test_dir+'/gr-howto'
+        self.assertRaises(ModToolException, ModToolDisable(**test_dict).run)
+
+        ## Some tests to check if the command reuns ##
+        test_dict['blockname'] = 'square_ff'
+        ModToolDisable(**test_dict).run()
 
 if __name__ == '__main__':
     unittest.main()
